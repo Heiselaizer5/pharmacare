@@ -2,8 +2,8 @@
 title: PharmaCare
 emoji: 💊
 colorFrom: green
-colorTo: teal
-sdk: docker
+colorTo: green
+sdk: gradio
 app_port: 7860
 pinned: false
 license: mit
