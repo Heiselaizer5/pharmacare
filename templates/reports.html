@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Reports - PharmaCare{% endblock %}
+{% block content %}
+<div class="space-y-4 md:space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-white">Sales Reports</h1>
+            <p class="text-gray-400 mt-1 text-sm">Track your pharmacy performance</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{{ url_for('export_csv', period=period) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs md:text-sm font-semibold transition">
+                <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                CSV
+            </a>
+            <a href="{{ url_for('export_excel', period=period) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-xl text-xs md:text-sm font-semibold transition">
+                <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Period Tabs -->
+    <div class="flex gap-2">
+        <a href="?period=daily" class="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all {% if period == 'daily' %}bg-primary-500 text-white shadow-lg shadow-primary-500/25{% else %}bg-gray-900/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/5{% endif %}">Daily</a>
+        <a href="?period=weekly" class="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all {% if period == 'weekly' %}bg-primary-500 text-white shadow-lg shadow-primary-500/25{% else %}bg-gray-900/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/5{% endif %}">Weekly</a>
+        <a href="?period=monthly" class="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all {% if period == 'monthly' %}bg-primary-500 text-white shadow-lg shadow-primary-500/25{% else %}bg-gray-900/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/5{% endif %}">Monthly</a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+        <div class="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg shadow-primary-500/20">
+            <p class="text-primary-100 text-[10px] md:text-sm font-medium">Total Revenue</p>
+            <p class="text-xl md:text-3xl font-black text-white mt-1 md:mt-2">TSH {{ "{:,.0f}".format(summary['total']) }}</p>
+        </div>
+        {% if profit_summary['profit'] >= 0 %}
+        <div class="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg shadow-green-500/20">
+            <p class="text-green-100 text-[10px] md:text-sm font-medium">Total Profit</p>
+            <p class="text-xl md:text-3xl font-black text-white mt-1 md:mt-2">TSH {{ "{:,.0f}".format(profit_summary['profit']) }}</p>
+        </div>
+        {% else %}
+        <div class="bg-gradient-to-br from-red-500 to-rose-600 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg shadow-red-500/20">
+            <p class="text-red-100 text-[10px] md:text-sm font-medium">Net Loss</p>
+            <p class="text-xl md:text-3xl font-black text-white mt-1 md:mt-2">TSH {{ "{:,.0f}".format(profit_summary['profit']|abs) }}</p>
+        </div>
+        {% endif %}
+        <div class="bg-gradient-to-br from-accent-500 to-purple-700 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg shadow-purple-500/20">
+            <p class="text-purple-100 text-[10px] md:text-sm font-medium">Total Cost</p>
+            <p class="text-xl md:text-3xl font-black text-white mt-1 md:mt-2">TSH {{ "{:,.0f}".format(profit_summary['cost']) }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg shadow-cyan-500/20">
+            <p class="text-cyan-100 text-[10px] md:text-sm font-medium">Transactions</p>
+            <p class="text-xl md:text-3xl font-black text-white mt-1 md:mt-2">{{ summary['count'] }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+        <!-- Daily Breakdown -->
+        <div class="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
+            <div class="px-4 md:px-6 py-3 md:py-4 border-b border-white/5">
+                <h3 class="text-base md:text-lg font-bold text-white">Daily Breakdown</h3>
+            </div>
+            <div class="divide-y divide-white/5">
+                {% for day in daily_data %}
+                <div class="px-4 md:px-6 py-3 flex items-center justify-between hover:bg-white/5 transition">
+                    <div class="min-w-0">
+                        <p class="text-xs md:text-sm font-semibold text-white">{{ day['day'] }}</p>
+                        <p class="text-[10px] md:text-xs text-gray-400">{{ day['count'] }} sale{{ 's' if day['count'] != 1 }}</p>
+                    </div>
+                    <div class="text-right shrink-0 ml-3">
+                        <p class="text-xs md:text-sm font-bold text-primary-400">TSH {{ "{:,.0f}".format(day['total']) }}</p>
+                        <div class="w-16 md:w-24 h-1.5 bg-white/5 rounded-full mt-1 overflow-hidden">
+                            {% set max_total = daily_data[0]['total'] if daily_data else 1 %}
+                            <div class="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full" style="width: {{ (day['total'] / (max_total or 1) * 100)|int }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="px-6 py-10 md:py-12 text-center text-gray-500 text-sm">No data for this period</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Medicine Sales -->
+        <div class="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
+            <div class="px-4 md:px-6 py-3 md:py-4 border-b border-white/5">
+                <h3 class="text-base md:text-lg font-bold text-white">Sales by Medicine</h3>
+            </div>
+            <div class="divide-y divide-white/5">
+                {% for med in medicine_report %}
+                <div class="px-4 md:px-6 py-3 flex items-center justify-between hover:bg-white/5 transition">
+                    <div class="flex items-center gap-2 md:gap-3 min-w-0">
+                        <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-accent-500/10 flex items-center justify-center text-xs md:text-sm font-bold text-accent-400 shrink-0">{{ loop.index }}</div>
+                        <div class="min-w-0">
+                            <p class="text-xs md:text-sm font-semibold text-white truncate">{{ med['name'] }}</p>
+                            <p class="text-[10px] md:text-xs text-gray-400">{{ med['qty_sold'] }} units</p>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0 ml-3">
+                        <p class="text-xs md:text-sm font-bold text-primary-400">TSH {{ "{:,.0f}".format(med['revenue']) }}</p>
+                        <p class="text-[10px] md:text-xs text-emerald-400">+TSH {{ "{:,.0f}".format(med['profit']) }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="px-6 py-10 md:py-12 text-center text-gray-500 text-sm">No medicine sales data</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- All Sales Table -->
+    <div class="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
+        <div class="px-4 md:px-6 py-3 md:py-4 border-b border-white/5">
+            <h3 class="text-base md:text-lg font-bold text-white">All Sales ({{ period|capitalize }})</h3>
+        </div>
+
+        <!-- Mobile: Card List -->
+        <div class="lg:hidden divide-y divide-white/5">
+            {% for sale in sales %}
+            <div class="px-4 py-3 flex items-center justify-between hover:bg-white/5 transition">
+                <div class="min-w-0">
+                    <p class="text-xs font-semibold text-white">#{{ '%05d' % sale['id'] }}</p>
+                    <p class="text-[10px] text-gray-400">{{ sale['created_at']|datetime_short }} &middot; {{ sale['cashier_name'] or 'N/A' }}</p>
+                </div>
+                <div class="text-right shrink-0 ml-3">
+                    <p class="text-xs font-bold text-primary-400">TSH {{ "{:,.0f}".format(sale['total_amount']) }}</p>
+                    <a href="{{ url_for('receipt', sale_id=sale['id']) }}" class="text-[10px] text-gray-500 hover:text-primary-400 transition">Receipt</a>
+                </div>
+            </div>
+            {% else %}
+            <div class="px-6 py-10 md:py-12 text-center text-gray-500 text-sm">No sales in this period</div>
+            {% endfor %}
+        </div>
+
+        <!-- Desktop: Table -->
+        <div class="hidden lg:block overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-white/5">
+                        <th class="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Sale ID</th>
+                        <th class="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cashier</th>
+                        <th class="text-right px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="text-center px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for sale in sales %}
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="px-6 py-3 text-sm font-semibold text-white">#{{ '%05d' % sale['id'] }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-300">{{ sale['created_at']|datetime_short }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-400">{{ sale['cashier_name'] or 'N/A' }}</td>
+                        <td class="px-6 py-3 text-sm font-bold text-primary-400 text-right">TSH {{ "{:,.0f}".format(sale['total_amount']) }}</td>
+                        <td class="px-6 py-3 text-center">
+                            <a href="{{ url_for('receipt', sale_id=sale['id']) }}" class="text-xs text-gray-400 hover:text-primary-400 font-semibold transition">View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500 text-sm">No sales in this period</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Expenses - PharmaCare{% endblock %}
+{% block content %}
+<div class="space-y-4 md:space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-white">Operating Expenses</h1>
+            <p class="text-gray-400 mt-1 text-sm">Manage rent, salaries, utilities & other expenses</p>
+        </div>
+        <button onclick="document.getElementById('addModal').classList.remove('hidden')" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 transition-all text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Expense
+        </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 gap-3 md:gap-5">
+        <div class="bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl p-4 md:p-6 shadow-lg shadow-red-500/20">
+            <p class="text-red-100 text-[10px] md:text-sm font-medium">Today's Expenses</p>
+            <p class="text-xl md:text-3xl font-black text-white mt-1 md:mt-2">TSH {{ "{:,.0f}".format(today_expenses) }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-4 md:p-6 shadow-lg shadow-orange-500/20">
+            <p class="text-orange-100 text-[10px] md:text-sm font-medium">Monthly Expenses</p>
+            <p class="text-xl md:text-3xl font-black text-white mt-1 md:mt-2">TSH {{ "{:,.0f}".format(month_expenses) }}</p>
+        </div>
+    </div>
+
+    <!-- Expenses Table / Cards -->
+    <div class="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
+        {% if expenses %}
+        <!-- Desktop Table -->
+        <div class="hidden md:block overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-white/5">
+                        <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Added By</th>
+                        <th class="px-6 py-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for e in expenses %}
+                    <tr class="hover:bg-white/[0.02] transition">
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ e['expense_date']|dateonly }}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold
+                                {% if e['category'] == 'Rent' %}bg-blue-500/10 text-blue-400
+                                {% elif e['category'] == 'Salaries' %}bg-purple-500/10 text-purple-400
+                                {% elif e['category'] == 'Utilities' %}bg-amber-500/10 text-amber-400
+                                {% elif e['category'] == 'Transport' %}bg-emerald-500/10 text-emerald-400
+                                {% else %}bg-gray-500/10 text-gray-400{% endif %}">
+                                {{ e['category'] }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ e['description'] or '-' }}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-red-400">TSH {{ "{:,.0f}".format(e['amount']) }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-400">{{ e['user_name'] or 'N/A' }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <form method="POST" action="{{ url_for('delete_expense', id=e['id']) }}" onsubmit="return confirm('Delete this expense?')" class="inline">
+                                <button type="submit" class="text-red-400 hover:text-red-300 text-xs font-bold transition">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="md:hidden divide-y divide-white/5">
+            {% for e in expenses %}
+            <div class="p-4 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold
+                        {% if e['category'] == 'Rent' %}bg-blue-500/10 text-blue-400
+                        {% elif e['category'] == 'Salaries' %}bg-purple-500/10 text-purple-400
+                        {% elif e['category'] == 'Utilities' %}bg-amber-500/10 text-amber-400
+                        {% elif e['category'] == 'Transport' %}bg-emerald-500/10 text-emerald-400
+                        {% else %}bg-gray-500/10 text-gray-400{% endif %}">
+                        {{ e['category'] }}
+                    </span>
+                    <span class="text-sm font-bold text-red-400">TSH {{ "{:,.0f}".format(e['amount']) }}</span>
+                </div>
+                {% if e['description'] %}
+                <p class="text-xs text-gray-400">{{ e['description'] }}</p>
+                {% endif %}
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] text-gray-500">{{ e['expense_date']|dateonly }} &bull; {{ e['user_name'] or 'N/A' }}</span>
+                    <form method="POST" action="{{ url_for('delete_expense', id=e['id']) }}" onsubmit="return confirm('Delete?')" class="inline">
+                        <button type="submit" class="text-red-400 hover:text-red-300 text-[10px] font-bold transition">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-12 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
+            <p class="text-gray-400 text-sm">No expenses recorded yet</p>
+            <p class="text-gray-500 text-xs mt-1">Click "Add Expense" to get started</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div id="addModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Add Expense</h3>
+            <button onclick="document.getElementById('addModal').classList.add('hidden')" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('add_expense') }}" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Category *</label>
+                <select name="category" required class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm">
+                    <option value="" class="bg-gray-900">Select category</option>
+                    <option value="Rent" class="bg-gray-900">Rent</option>
+                    <option value="Salaries" class="bg-gray-900">Salaries</option>
+                    <option value="Utilities" class="bg-gray-900">Utilities (Electricity, Water)</option>
+                    <option value="Transport" class="bg-gray-900">Transport</option>
+                    <option value="Maintenance" class="bg-gray-900">Maintenance</option>
+                    <option value="Supplies" class="bg-gray-900">Office Supplies</option>
+                    <option value="Other" class="bg-gray-900">Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Amount (TSH) *</label>
+                <input type="number" name="amount" required min="0" step="100" placeholder="e.g. 50000"
+                    class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Description</label>
+                <input type="text" name="description" placeholder="e.g. July office rent"
+                    class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Date</label>
+                <input type="date" name="expense_date"
+                    class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm">
+            </div>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="document.getElementById('addModal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition font-medium text-sm">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 transition-all text-sm">Add Expense</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

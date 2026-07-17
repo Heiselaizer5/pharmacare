@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Purchases - PharmaCare{% endblock %}
+{% block content %}
+<div class="space-y-4 md:space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-white">Purchases</h1>
+            <p class="text-gray-400 mt-1 text-sm">Record new stock purchases</p>
+        </div>
+        <div class="text-left sm:text-right">
+            <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Total Spent</p>
+            <p class="text-xl md:text-2xl font-black text-red-400">TSH {{ "{:,.0f}".format(total_spent) }}</p>
+        </div>
+    </div>
+
+    <!-- Purchase Form -->
+    <div class="bg-gray-900/50 border border-white/5 rounded-2xl p-4 md:p-6">
+        <h3 class="text-base md:text-lg font-bold text-white mb-4">Record New Purchase</h3>
+        <form method="POST" action="{{ url_for('add_purchase') }}" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Medicine *</label>
+                    <select name="medicine_id" required class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm">
+                        <option value="" class="bg-gray-900">Select medicine...</option>
+                        {% for med in medicines %}
+                        <option value="{{ med['id'] }}" class="bg-gray-900">{{ med['name'] }} (TSH {{ "{:,.0f}".format(med['buying_price']) }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Quantity *</label>
+                    <input type="number" name="quantity" required min="1" placeholder="0"
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Unit Cost (TSH) *</label>
+                    <input type="number" name="unit_cost" required min="0" step="any" placeholder="0"
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Supplier</label>
+                    <input type="text" name="supplier" placeholder="Supplier name"
+                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm">
+                </div>
+            </div>
+            <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold rounded-xl shadow-lg shadow-primary-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98] text-sm">
+                + Record Purchase
+            </button>
+        </form>
+    </div>
+
+    <!-- Purchase History -->
+    <div class="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
+        <div class="px-4 md:px-6 py-3 md:py-4 border-b border-white/5">
+            <h3 class="text-base md:text-lg font-bold text-white">Purchase History</h3>
+        </div>
+
+        <!-- Mobile: Card Layout -->
+        <div class="lg:hidden divide-y divide-white/5">
+            {% for p in purchases %}
+            <div class="px-4 py-3 hover:bg-white/5 transition">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="text-sm font-semibold text-white">{{ p['medicine_name'] }}</p>
+                    <p class="text-sm font-bold text-red-400">TSH {{ "{:,.0f}".format(p['quantity'] * p['unit_cost']) }}</p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap text-[10px]">
+                    <span class="text-gray-400">x{{ p['quantity'] }}</span>
+                    <span class="text-gray-500">@</span>
+                    <span class="text-gray-400">TSH {{ "{:,.0f}".format(p['unit_cost']) }} ea</span>
+                    <span class="text-gray-500">&middot;</span>
+                    <span class="text-gray-500">{{ p['created_at']|dateonly }}</span>
+                    {% if p['supplier'] %}
+                    <span class="text-gray-500">&middot;</span>
+                    <span class="text-gray-400">{{ p['supplier'] }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="px-6 py-10 md:py-12 text-center text-gray-500 text-sm">No purchases recorded yet</div>
+            {% endfor %}
+        </div>
+
+        <!-- Desktop: Table Layout -->
+        <div class="hidden lg:block overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-white/5">
+                        <th class="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Medicine</th>
+                        <th class="text-center px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Quantity</th>
+                        <th class="text-right px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Unit Cost</th>
+                        <th class="text-right px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Total</th>
+                        <th class="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Supplier</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for p in purchases %}
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="px-6 py-3 text-sm text-gray-300">{{ p['created_at']|dateonly }}</td>
+                        <td class="px-6 py-3 text-sm font-semibold text-white">{{ p['medicine_name'] }}</td>
+                        <td class="px-6 py-3 text-sm text-center text-gray-300">{{ p['quantity'] }}</td>
+                        <td class="px-6 py-3 text-sm text-right text-gray-300 font-mono">TSH {{ "{:,.0f}".format(p['unit_cost']) }}</td>
+                        <td class="px-6 py-3 text-sm text-right font-bold text-red-400 font-mono">TSH {{ "{:,.0f}".format(p['quantity'] * p['unit_cost']) }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-400">{{ p['supplier'] or 'N/A' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 text-sm">No purchases recorded yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
