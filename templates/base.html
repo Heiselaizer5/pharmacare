@@ -28,10 +28,103 @@
         .gradient-bg { background: linear-gradient(135deg, #064e3b 0%, #0f0a2e 100%); }
         .card-glow:hover { box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
         .sidebar-link.active { background: linear-gradient(90deg, rgba(16,185,129,0.2) 0%, transparent 100%); border-left: 3px solid #10b981; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        .animate-in { animation: fadeIn 0.3s ease-out; }
+
+        @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeOut { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-8px)} }
+        @keyframes slideInRight { from{opacity:0;transform:translateX(120%) scale(0.9)} to{opacity:1;transform:translateX(0) scale(1)} }
+        @keyframes slideOutRight { from{opacity:1;transform:translateX(0) scale(1)} to{opacity:0;transform:translateX(120%) scale(0.85)} }
+        @keyframes popIn { 0%{opacity:0;transform:scale(0.5)} 60%{transform:scale(1.05)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes popOut { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.8)} }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 15%,45%,75%{transform:translateX(-5px)} 30%,60%,90%{transform:translateX(5px)} }
+        @keyframes bounceIn { 0%{opacity:0;transform:scale(0.3)} 40%{opacity:1;transform:scale(1.08)} 60%{transform:scale(0.95)} 80%{transform:scale(1.02)} 100%{transform:scale(1)} }
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        @keyframes pulseGlow { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0)} 50%{box-shadow:0 0 20px 4px rgba(16,185,129,0.15)} }
+        @keyframes iconPop { 0%{transform:scale(0) rotate(-30deg)} 50%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0)} }
+        @keyframes progressShrink { from{width:100%} to{width:0%} }
+        @keyframes staggerFade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes modalOverlayIn { from{opacity:0} to{opacity:1} }
+        @keyframes modalCardIn { from{opacity:0;transform:scale(0.9) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes modalCardOut { from{opacity:1;transform:scale(1) translateY(0)} to{opacity:0;transform:scale(0.9) translateY(20px)} }
+        @keyframes modalOverlayOut { from{opacity:1} to{opacity:0} }
+
+        .animate-in { animation: fadeIn 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+        .toast-enter { animation: slideInRight 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .toast-exit { animation: slideOutRight 0.35s cubic-bezier(0.55,0,1,0.45) forwards; }
+        .toast-icon-animate { animation: iconPop 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.15s both; }
+        .toast-shake { animation: shake 0.5s ease; }
+        .modal-overlay-in { animation: modalOverlayIn 0.25s ease both; }
+        .modal-overlay-out { animation: modalOverlayOut 0.2s ease both; }
+        .modal-card-in { animation: modalCardIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .modal-card-out { animation: modalCardOut 0.25s cubic-bezier(0.55,0,1,0.45) both; }
+
         @media print { .no-print{display:none!important} .print-only{display:block!important} body{background:white!important} }
         .print-only { display: none; }
+
+        #toast-container {
+            position: fixed; top: 80px; right: 16px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 12px;
+            max-width: 400px; width: calc(100% - 32px);
+            pointer-events: none;
+        }
+        #toast-container > div { pointer-events: auto; }
+
+        .toast {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 16px 18px; border-radius: 18px;
+            backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.05);
+            cursor: pointer;
+            position: relative; overflow: hidden;
+            transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+        }
+        .toast:hover { transform: translateX(-4px) scale(1.01); box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.08); }
+        .toast:active { transform: translateX(-2px) scale(0.98); transition-duration: 0.1s; }
+
+        .toast-icon {
+            flex-shrink: 0; width: 42px; height: 42px; border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .toast:hover .toast-icon { transform: scale(1.1) rotate(-5deg); }
+        .toast-body { flex: 1; min-width: 0; padding-top: 2px; }
+        .toast-title { font-size: 14px; font-weight: 800; margin-bottom: 3px; letter-spacing: -0.01em; }
+        .toast-msg { font-size: 12.5px; opacity: 0.85; line-height: 1.45; font-weight: 500; }
+        .toast-close {
+            flex-shrink: 0; width: 26px; height: 26px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0.4; transition: all 0.2s;
+        }
+        .toast-close:hover { opacity: 1; background: rgba(255,255,255,0.12); transform: rotate(90deg); }
+        .toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; border-radius: 0 0 18px 18px; }
+
+        .toast-success { background: rgba(5,70,50,0.96); border: 1px solid rgba(16,185,129,0.35); }
+        .toast-success .toast-icon { background: rgba(16,185,129,0.2); color: #34d399; }
+        .toast-success .toast-title { color: #6ee7b7; }
+        .toast-success .toast-msg { color: #a7f3d0; }
+        .toast-success .toast-progress { background: linear-gradient(90deg, #059669, #34d399, #6ee7b7); }
+
+        .toast-error { background: rgba(120,20,20,0.96); border: 1px solid rgba(239,68,68,0.35); }
+        .toast-error .toast-icon { background: rgba(239,68,68,0.2); color: #f87171; }
+        .toast-error .toast-title { color: #fca5a5; }
+        .toast-error .toast-msg { color: #fecaca; }
+        .toast-error .toast-progress { background: linear-gradient(90deg, #dc2626, #f87171, #fca5a5); }
+
+        .toast-warning { background: rgba(110,45,10,0.96); border: 1px solid rgba(245,158,11,0.35); }
+        .toast-warning .toast-icon { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .toast-warning .toast-title { color: #fcd34d; }
+        .toast-warning .toast-msg { color: #fde68a; }
+        .toast-warning .toast-progress { background: linear-gradient(90deg, #d97706, #fbbf24, #fcd34d); }
+
+        .toast-info { background: rgba(25,22,65,0.96); border: 1px solid rgba(139,92,246,0.35); }
+        .toast-info .toast-icon { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        .toast-info .toast-title { color: #c4b5fd; }
+        .toast-info .toast-msg { color: #ddd6fe; }
+        .toast-info .toast-progress { background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd); }
+
+        @media (max-width: 640px) {
+            #toast-container { top: 60px; right: 10px; left: 10px; max-width: none; width: auto; }
+            .toast { padding: 14px 14px; border-radius: 16px; }
+        }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen">
@@ -131,16 +224,16 @@
         <!-- Main Content -->
         <main class="flex-1 lg:ml-64 pt-14 lg:pt-0">
             <div class="p-4 md:p-6 lg:p-8 animate-in">
+                <div id="toast-container"></div>
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                <div class="mb-6 space-y-2">
+                <script>
+                (function(){
                     {% for category, message in messages %}
-                    <div class="px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2 {% if category == 'error' %}bg-red-500/10 border border-red-500/20 text-red-400{% else %}bg-primary-500/10 border border-primary-500/20 text-primary-400{% endif %}">
-                        {% if category == 'error' %}<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>{% else %}<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>{% endif %}
-                        {{ message }}
-                    </div>
+                    showToast('{{ category }}', '{{ message }}');
                     {% endfor %}
-                </div>
+                })();
+                </script>
                 {% endif %}
                 {% endwith %}
                 {% block content %}{% endblock %}
@@ -156,6 +249,118 @@
             const o = document.getElementById('sidebarOverlay');
             s.classList.toggle('-translate-x-full');
             o.classList.toggle('hidden');
+        }
+
+        function showToast(type, message, title, duration) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const icons = {
+                success: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>',
+                error: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>',
+                warning: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+                info: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+            };
+
+            const titles = { success: 'Success', error: 'Error', warning: 'Warning', info: 'Info' };
+            if (!title) title = titles[type] || 'Notice';
+            if (!duration) duration = type === 'error' ? 6000 : 4000;
+
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-' + type + ' toast-enter';
+            toast.innerHTML = `
+                <div class="toast-icon toast-icon-animate">${icons[type] || icons.info}</div>
+                <div class="toast-body">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-msg">${message}</div>
+                </div>
+                <div class="toast-close" onclick="dismissToast(this.parentElement)">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <div class="toast-progress" style="width:100%;transition:width ${duration}ms linear"></div>
+            `;
+
+            toast.onclick = function(e) {
+                if (!e.target.closest('.toast-close')) dismissToast(toast);
+            };
+
+            container.appendChild(toast);
+
+            const bar = toast.querySelector('.toast-progress');
+            requestAnimationFrame(() => { requestAnimationFrame(() => { bar.style.width = '0%'; }); });
+
+            toast._timer = setTimeout(() => dismissToast(toast), duration);
+        }
+
+        function dismissToast(toast) {
+            if (!toast || !toast.parentElement) return;
+            clearTimeout(toast._timer);
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 350);
+        }
+
+        function showConfirm(title, message, onConfirm, confirmText, cancelText) {
+            confirmText = confirmText || 'Confirm';
+            cancelText = cancelText || 'Cancel';
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 modal-overlay-in';
+            overlay.innerHTML = `
+                <div class="bg-gray-900 border border-white/10 rounded-3xl p-7 max-w-sm w-full shadow-2xl modal-card-in" style="box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-500/15 flex items-center justify-center mx-auto mb-5" style="animation:bounceIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both">
+                        <svg class="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-black text-white text-center mb-2">${title}</h3>
+                    <p class="text-sm text-gray-400 text-center mb-7 leading-relaxed">${message}</p>
+                    <div class="flex gap-3">
+                        <button class="flex-1 py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/15 font-semibold text-sm transition-all duration-200 cancel-btn" style="animation:staggerFade 0.3s ease 0.3s both">${cancelText}</button>
+                        <button class="flex-1 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-200 active:scale-95 confirm-btn" style="animation:staggerFade 0.3s ease 0.35s both">${confirmText}</button>
+                    </div>
+                </div>
+            `;
+            overlay.querySelector('.cancel-btn').onclick = () => closeModal(overlay);
+            overlay.querySelector('.confirm-btn').onclick = () => { closeModal(overlay); setTimeout(onConfirm, 200); };
+            overlay.onclick = (e) => { if (e.target === overlay) closeModal(overlay); };
+            document.body.appendChild(overlay);
+        }
+
+        function showPrompt(title, message, onConfirm, placeholder, confirmText, cancelText) {
+            confirmText = confirmText || 'Submit';
+            cancelText = cancelText || 'Cancel';
+            placeholder = placeholder || '';
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 modal-overlay-in';
+            overlay.innerHTML = `
+                <div class="bg-gray-900 border border-white/10 rounded-3xl p-7 max-w-sm w-full shadow-2xl modal-card-in" style="box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)">
+                    <h3 class="text-xl font-black text-white text-center mb-2">${title}</h3>
+                    <p class="text-sm text-gray-400 text-center mb-5 leading-relaxed">${message}</p>
+                    <input type="text" class="prompt-input w-full px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm mb-6 transition-all duration-200" placeholder="${placeholder}" autofocus style="animation:staggerFade 0.3s ease 0.15s both">
+                    <div class="flex gap-3">
+                        <button class="flex-1 py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 font-semibold text-sm transition-all duration-200 cancel-btn" style="animation:staggerFade 0.3s ease 0.25s both">${cancelText}</button>
+                        <button class="flex-1 py-3 rounded-2xl bg-primary-500 hover:bg-primary-600 text-white font-bold text-sm shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-all duration-200 active:scale-95 confirm-btn" style="animation:staggerFade 0.3s ease 0.3s both">${confirmText}</button>
+                    </div>
+                </div>
+            `;
+            const input = overlay.querySelector('.prompt-input');
+            overlay.querySelector('.cancel-btn').onclick = () => closeModal(overlay);
+            overlay.querySelector('.confirm-btn').onclick = () => {
+                const v = input.value.trim();
+                if (v) { closeModal(overlay); setTimeout(() => onConfirm(v), 200); }
+                else { input.classList.add('toast-shake'); setTimeout(() => input.classList.remove('toast-shake'), 500); input.focus(); }
+            };
+            input.onkeydown = (e) => { if (e.key === 'Enter') overlay.querySelector('.confirm-btn').click(); if (e.key === 'Escape') closeModal(overlay); };
+            overlay.onclick = (e) => { if (e.target === overlay) closeModal(overlay); };
+            document.body.appendChild(overlay);
+            setTimeout(() => input.focus(), 150);
+        }
+
+        function closeModal(overlay) {
+            if (!overlay) return;
+            const card = overlay.querySelector('.modal-card-in, [class*="rounded-3xl"]');
+            overlay.classList.remove('modal-overlay-in');
+            overlay.classList.add('modal-overlay-out');
+            if (card) card.classList.add('modal-card-out');
+            setTimeout(() => overlay.remove(), 250);
         }
     </script>
 </body>

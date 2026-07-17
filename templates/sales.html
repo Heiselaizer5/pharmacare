@@ -138,8 +138,8 @@ function addToCart(row) {
     const stock = parseInt(row.dataset.stock);
 
     const existing = cart.find(i => i.id === id);
-    if (existing) {
-        if (existing.qty >= stock) { alert('No more stock available!'); return; }
+        if (existing) {
+        if (existing.qty >= stock) { showToast('warning', 'No more stock available!', 'Out of Stock'); return; }
         existing.qty++;
     } else {
         cart.push({ id, name, price, qty: 1, stock });
@@ -162,7 +162,7 @@ function changeQty(id, delta) {
     if (!item) return;
     item.qty += delta;
     if (item.qty <= 0) { removeFromCart(id); return; }
-    if (item.qty > item.stock) { item.qty = item.stock; alert('Max stock reached!'); }
+    if (item.qty > item.stock) { item.qty = item.stock; showToast('warning', 'Maximum stock reached!', 'Stock Limit'); }
     renderCart();
 }
 
@@ -238,11 +238,11 @@ async function completeSale() {
         if (res.ok) {
             window.location.href = '/receipt/' + data.sale_id;
         } else {
-            alert('Error: ' + data.error);
+            showToast('error', data.error, 'Sale Failed');
             btn.disabled = false; btn.textContent = 'Complete Sale';
         }
     } catch(e) {
-        alert('Network error');
+        showToast('error', 'Network error. Please try again.', 'Connection Failed');
         btn.disabled = false; btn.textContent = 'Complete Sale';
     }
 }
