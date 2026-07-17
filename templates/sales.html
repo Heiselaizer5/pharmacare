@@ -7,9 +7,15 @@
         <p class="text-gray-400 mt-1 text-sm">Select medicines and complete the sale</p>
     </div>
 
+    <!-- Mobile: Tab Switcher -->
+    <div class="lg:hidden flex bg-gray-900/50 border border-white/10 rounded-xl p-1 gap-1">
+        <button id="tab-medicines" onclick="showTab('medicines')" class="flex-1 py-2.5 rounded-lg text-sm font-bold bg-primary-500 text-white transition-all">💊 Medicines</button>
+        <button id="tab-cart" onclick="showTab('cart')" class="flex-1 py-2.5 rounded-lg text-sm font-bold text-gray-400 transition-all">🛒 Cart <span id="mobile-cart-badge" class="text-primary-400">(0)</span></button>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
         <!-- Medicine Selection -->
-        <div class="lg:col-span-7 bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
+        <div id="panel-medicines" class="lg:col-span-7 bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
             <div class="px-4 md:px-6 py-3 md:py-4 border-b border-white/5">
                 <div class="relative">
                     <input type="text" id="search-input" placeholder="Search medicine..."
@@ -17,19 +23,19 @@
                     <svg class="absolute left-3 top-2.5 md:top-3 w-4 h-4 md:w-5 md:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
             </div>
-            <div class="max-h-[400px] lg:max-h-[500px] overflow-y-auto">
+            <div class="max-h-[50vh] lg:max-h-[500px] overflow-y-auto">
                 <!-- Mobile: Card layout -->
                 <div id="medicine-cards" class="lg:hidden divide-y divide-white/5">
                     {% for med in medicines %}
                     <div class="px-4 py-3 flex items-center justify-between hover:bg-white/5 transition" data-name="{{ med['name']|lower }}" data-id="{{ med['id'] }}" data-price="{{ med['selling_price'] }}" data-stock="{{ med['stock_qty'] }}" data-medname="{{ med['name'] }}">
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <p class="text-sm font-semibold text-white truncate">{{ med['name'] }}</p>
                             <div class="flex items-center gap-2 mt-1">
                                 <span class="text-xs font-bold text-primary-400">TSH {{ "{:,.0f}".format(med['selling_price']) }}</span>
-                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full {% if med['stock_qty'] <= 10 %}bg-red-500/10 text-red-400{% else %}bg-primary-500/10 text-primary-400{% endif %}">{{ med['stock_qty'] }}</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full {% if med['stock_qty'] <= 10 %}bg-red-500/10 text-red-400{% else %}bg-primary-500/10 text-primary-400{% endif %}">{{ med['stock_qty'] }} left</span>
                             </div>
                         </div>
-                        <button onclick="addToCard(this.closest('[data-id]'))" class="px-3 py-1.5 bg-primary-500 text-white hover:bg-primary-600 rounded-lg text-xs font-bold transition shrink-0 ml-3 shadow shadow-primary-500/25">+ Add</button>
+                        <button onclick="addToCard(this.closest('[data-id]'))" class="px-3 py-1.5 bg-primary-500 text-white hover:bg-primary-600 rounded-lg text-xs font-bold transition shrink-0 ml-3 shadow shadow-primary-500/25 active:scale-95">+ Add</button>
                     </div>
                     {% endfor %}
                 </div>
@@ -65,13 +71,13 @@
         </div>
 
         <!-- Cart -->
-        <div class="lg:col-span-5 bg-gray-900/50 border border-white/5 rounded-2xl flex flex-col">
+        <div id="panel-cart" class="lg:col-span-5 bg-gray-900/50 border border-white/5 rounded-2xl flex flex-col">
             <div class="px-4 md:px-6 py-3 md:py-4 border-b border-white/5 flex items-center justify-between">
                 <h3 class="text-base md:text-lg font-bold text-white">Sale Cart</h3>
                 <span id="cart-badge" class="px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-bold bg-primary-500/10 text-primary-400">0 items</span>
             </div>
 
-            <div class="flex-1 overflow-y-auto max-h-[280px] lg:max-h-[320px] p-3 md:p-4">
+            <div class="flex-1 overflow-y-auto max-h-[30vh] lg:max-h-[320px] p-3 md:p-4">
                 <div id="cart-empty" class="py-10 md:py-12 text-center text-gray-500 text-sm">
                     <svg class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
                     Cart is empty
@@ -96,6 +102,31 @@
 <script>
 let cart = [];
 
+// Mobile tab switching
+function showTab(tab) {
+    const medsPanel = document.getElementById('panel-medicines');
+    const cartPanel = document.getElementById('panel-cart');
+    const tabMeds = document.getElementById('tab-medicines');
+    const tabCart = document.getElementById('tab-cart');
+    if (tab === 'medicines') {
+        medsPanel.classList.remove('hidden');
+        cartPanel.classList.add('hidden');
+        tabMeds.className = 'flex-1 py-2.5 rounded-lg text-sm font-bold bg-primary-500 text-white transition-all';
+        tabCart.className = 'flex-1 py-2.5 rounded-lg text-sm font-bold text-gray-400 transition-all';
+    } else {
+        medsPanel.classList.add('hidden');
+        cartPanel.classList.remove('hidden');
+        tabCart.className = 'flex-1 py-2.5 rounded-lg text-sm font-bold bg-primary-500 text-white transition-all';
+        tabMeds.className = 'flex-1 py-2.5 rounded-lg text-sm font-bold text-gray-400 transition-all';
+    }
+}
+
+// On desktop, always show both panels
+if (window.innerWidth >= 1024) {
+    document.getElementById('panel-medicines').classList.remove('hidden');
+    document.getElementById('panel-cart').classList.remove('hidden');
+}
+
 function addToCard(row) {
     addToCart(row);
 }
@@ -114,6 +145,11 @@ function addToCart(row) {
         cart.push({ id, name, price, qty: 1, stock });
     }
     renderCart();
+
+    // Auto-switch to cart on mobile after adding
+    if (window.innerWidth < 1024) {
+        showTab('cart');
+    }
 }
 
 function removeFromCart(id) {
@@ -134,6 +170,7 @@ function renderCart() {
     const container = document.getElementById('cart-items');
     const empty = document.getElementById('cart-empty');
     const badge = document.getElementById('cart-badge');
+    const mobileBadge = document.getElementById('mobile-cart-badge');
     const total = document.getElementById('cart-total');
     const btn = document.getElementById('checkout-btn');
 
@@ -142,6 +179,7 @@ function renderCart() {
         container.innerHTML = '';
         btn.disabled = true;
         badge.textContent = '0 items';
+        if (mobileBadge) mobileBadge.textContent = '(0)';
         total.textContent = 'TSH 0';
         return;
     }
@@ -158,29 +196,28 @@ function renderCart() {
                 <p class="text-[10px] md:text-xs text-gray-400">TSH ${item.price.toLocaleString()} ea</p>
             </div>
             <div class="flex items-center gap-1 md:gap-2 shrink-0">
-                <button onclick="changeQty(${item.id},-1)" class="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-bold text-xs md:text-sm transition">-</button>
-                <span class="w-5 md:w-6 text-center text-xs md:text-sm font-bold text-white">${item.qty}</span>
-                <button onclick="changeQty(${item.id},1)" class="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-bold text-xs md:text-sm transition">+</button>
+                <button onclick="changeQty(${item.id},-1)" class="w-7 h-7 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-bold text-sm transition active:scale-95">-</button>
+                <span class="w-6 text-center text-sm font-bold text-white">${item.qty}</span>
+                <button onclick="changeQty(${item.id},1)" class="w-7 h-7 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-bold text-sm transition active:scale-95">+</button>
             </div>
-            <p class="text-xs md:text-sm font-bold text-primary-400 w-16 md:w-24 text-right shrink-0">TSH ${sub.toLocaleString()}</p>
-            <button onclick="removeFromCart(${item.id})" class="text-gray-500 hover:text-red-400 transition shrink-0">
-                <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <p class="text-xs md:text-sm font-bold text-primary-400 w-20 md:w-24 text-right shrink-0">TSH ${sub.toLocaleString()}</p>
+            <button onclick="removeFromCart(${item.id})" class="text-gray-500 hover:text-red-400 transition shrink-0 p-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>`;
     }).join('');
 
     badge.textContent = `${count} item${count>1?'s':''}`;
+    if (mobileBadge) mobileBadge.textContent = `(${count})`;
     total.textContent = `TSH ${sum.toLocaleString()}`;
     btn.disabled = false;
 }
 
 document.getElementById('search-input').addEventListener('input', function() {
     const q = this.value.toLowerCase();
-    // Desktop table
     document.querySelectorAll('#medicine-list tr').forEach(row => {
         row.style.display = row.dataset.name.includes(q) ? '' : 'none';
     });
-    // Mobile cards
     document.querySelectorAll('#medicine-cards [data-id]').forEach(card => {
         card.style.display = card.dataset.name.includes(q) ? '' : 'none';
     });
