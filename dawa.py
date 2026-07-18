@@ -30,7 +30,7 @@ def datetime_short_filter(value):
     if hasattr(value, 'strftime'):
         return value.strftime('%Y-%m-%d %H:%M')
     return str(value)[:16]
-DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://neondb_owner:npg_8Q7zjucTVLZn@ep-super-hat-aziy97vt.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&connect_timeout=60&keepalives=1&keepalives_idle=10&keepalives_interval=5&keepalives_count=5')
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres.oypqzvhtszdyahtrxysc:pharmadawa123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres')
 
 
 def get_db():
