@@ -810,6 +810,11 @@ def edit_user(id):
         conn.commit()
         cur.close()
         conn.close()
+        if id == session.get('user_id'):
+            session['full_name'] = full_name
+            session['phone'] = phone or ''
+            session['role'] = role
+            session['branch_id'] = branch_id
         flash('User updated successfully!', 'success')
         return redirect(url_for('users'))
     conn.close()
