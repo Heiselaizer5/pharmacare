@@ -29,7 +29,7 @@
     <div class="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
         {% if expenses %}
         <!-- Desktop Table -->
-        <div class="hidden md:block overflow-x-auto">
+        <div class="hidden lg:block overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-white/5">
@@ -59,8 +59,8 @@
                         <td class="px-6 py-4 text-sm font-bold text-red-400">TSH {{ "{:,.0f}".format(e['amount']) }}</td>
                         <td class="px-6 py-4 text-sm text-gray-400">{{ e['user_name'] or 'N/A' }}</td>
                         <td class="px-6 py-4 text-right">
-                            <form method="POST" action="{{ url_for('delete_expense', id=e['id']) }}" onsubmit="return confirm('Delete this expense?')" class="inline">
-                                <button type="submit" class="text-red-400 hover:text-red-300 text-xs font-bold transition">Delete</button>
+                            <form method="POST" action="{{ url_for('delete_expense', id=e['id']) }}" id="del-exp-{{ e['id'] }}" class="inline">
+                                <button type="button" onclick="deleteExpense('{{ e['id'] }}', '{{ e['description'] or 'this expense' }}')" class="text-red-400 hover:text-red-300 text-xs font-bold transition">Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -70,7 +70,7 @@
         </div>
 
         <!-- Mobile Cards -->
-        <div class="md:hidden divide-y divide-white/5">
+        <div class="lg:hidden divide-y divide-white/5">
             {% for e in expenses %}
             <div class="p-4 space-y-2">
                 <div class="flex items-center justify-between">
@@ -89,8 +89,8 @@
                 {% endif %}
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] text-gray-500">{{ e['expense_date']|dateonly }} &bull; {{ e['user_name'] or 'N/A' }}</span>
-                    <form method="POST" action="{{ url_for('delete_expense', id=e['id']) }}" onsubmit="return confirm('Delete?')" class="inline">
-                        <button type="submit" class="text-red-400 hover:text-red-300 text-[10px] font-bold transition">Delete</button>
+                    <form method="POST" action="{{ url_for('delete_expense', id=e['id']) }}" id="del-exp-m-{{ e['id'] }}" class="inline">
+                        <button type="button" onclick="deleteExpense('{{ e['id'] }}', '{{ e['description'] or 'this expense' }}')" class="text-red-400 hover:text-red-300 text-[10px] font-bold transition">Delete</button>
                     </form>
                 </div>
             </div>
@@ -153,4 +153,14 @@
         </form>
     </div>
 </div>
+<script>
+function deleteExpense(id, desc) {
+    showConfirm('Delete Expense', 'Are you sure you want to delete ' + desc + '? This action cannot be undone.', function() {
+        var el = document.getElementById('del-exp-' + id);
+        if (el) { el.submit(); return; }
+        el = document.getElementById('del-exp-m-' + id);
+        if (el) { el.submit(); }
+    }, 'Delete', 'Cancel');
+}
+</script>
 {% endblock %}

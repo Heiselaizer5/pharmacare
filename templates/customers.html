@@ -50,8 +50,8 @@
                         <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold shrink-0">{{ c['name'][0] }}</div>
                         <p class="text-sm font-semibold text-white truncate">{{ c['name'] }}</p>
                     </div>
-                    <form method="POST" action="{{ url_for('delete_customer', id=c['id']) }}" onsubmit="return confirm('Delete {{ c['name'] }}?')">
-                        <button type="submit" class="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition text-xs">Delete</button>
+                    <form method="POST" action="{{ url_for('delete_customer', id=c['id']) }}" id="del-cust-m-{{ c['id'] }}">
+                        <button type="button" onclick="deleteCustomer('{{ c['id'] }}', '{{ c['name'] }}', 'm')" class="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition text-xs">Delete</button>
                     </form>
                 </div>
                 <div class="flex items-center gap-3 text-[10px] text-gray-400 pl-10">
@@ -94,8 +94,8 @@
                         <td class="px-6 py-3 text-center text-sm font-bold text-white">{{ c['total_purchases'] }}</td>
                         <td class="px-6 py-3 text-right text-sm font-bold text-primary-400">TSH {{ "{:,.0f}".format(c['total_spent']) }}</td>
                         <td class="px-6 py-3 text-right">
-                            <form method="POST" action="{{ url_for('delete_customer', id=c['id']) }}" onsubmit="return confirm('Delete {{ c['name'] }}?')" class="inline">
-                                <button type="submit" class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition opacity-0 group-hover:opacity-100" title="Delete">
+                            <form method="POST" action="{{ url_for('delete_customer', id=c['id']) }}" id="del-cust-d-{{ c['id'] }}" class="inline">
+                                <button type="button" onclick="deleteCustomer('{{ c['id'] }}', '{{ c['name'] }}', 'd')" class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition opacity-0 group-hover:opacity-100" title="Delete">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </form>
@@ -109,4 +109,11 @@
         </div>
     </div>
 </div>
+<script>
+function deleteCustomer(id, name, view) {
+    showConfirm('Delete Customer', 'Are you sure you want to delete "' + name + '"? This action cannot be undone.', function() {
+        document.getElementById('del-cust-' + view + '-' + id).submit();
+    }, 'Delete', 'Cancel');
+}
+</script>
 {% endblock %}

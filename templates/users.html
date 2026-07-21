@@ -48,8 +48,8 @@
             <div class="flex items-center gap-2">
                 <a href="{{ url_for('edit_user', id=user['id']) }}" class="flex-1 text-center py-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs font-bold transition">Edit</a>
                 {% if user['id'] != session.get('user_id') %}
-                <form method="POST" action="{{ url_for('delete_user', id=user['id']) }}" onsubmit="return confirm('Delete {{ user['full_name'] }}?')" class="flex-1">
-                    <button type="submit" class="w-full py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold transition">Delete</button>
+                <form method="POST" action="{{ url_for('delete_user', id=user['id']) }}" id="del-user-{{ user['id'] }}" class="flex-1">
+                    <button type="button" onclick="deleteUser('{{ user['id'] }}', '{{ user['full_name'] }}')" class="w-full py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold transition">Delete</button>
                 </form>
                 {% endif %}
             </div>
@@ -57,4 +57,11 @@
         {% endfor %}
     </div>
 </div>
+<script>
+function deleteUser(id, name) {
+    showConfirm('Delete User', 'Are you sure you want to delete "' + name + '"? This action cannot be undone.', function() {
+        document.getElementById('del-user-' + id).submit();
+    }, 'Delete', 'Cancel');
+}
+</script>
 {% endblock %}

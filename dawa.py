@@ -493,7 +493,11 @@ def edit_medicine(id):
         conn.close()
         flash('Medicine updated successfully!', 'success')
         return redirect(url_for('medicines'))
-    cur = dict_query(conn, "SELECT * FROM medicines WHERE id=%s", (id,))
+    bid = get_branch_id()
+    if bid is not None:
+        cur = dict_query(conn, "SELECT * FROM medicines WHERE id=%s AND branch_id=%s", (id, bid))
+    else:
+        cur = dict_query(conn, "SELECT * FROM medicines WHERE id=%s", (id,))
     med = cur.fetchone()
     cur.close()
     conn.close()
@@ -506,9 +510,13 @@ def edit_medicine(id):
 @app.route('/medicines/delete/<int:id>', methods=['POST'])
 @admin_required
 def delete_medicine(id):
+    bid = get_branch_id()
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("DELETE FROM medicines WHERE id=%s", (id,))
+    if bid is not None:
+        cur.execute("DELETE FROM medicines WHERE id=%s AND branch_id=%s", (id, bid))
+    else:
+        cur.execute("DELETE FROM medicines WHERE id=%s", (id,))
     conn.commit()
     cur.close()
     conn.close()
@@ -1366,9 +1374,13 @@ def add_expense():
 @app.route('/expenses/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_expense(id):
+    bid = get_branch_id()
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("DELETE FROM expenses WHERE id=%s", (id,))
+    if bid is not None:
+        cur.execute("DELETE FROM expenses WHERE id=%s AND branch_id=%s", (id, bid))
+    else:
+        cur.execute("DELETE FROM expenses WHERE id=%s", (id,))
     conn.commit()
     cur.close()
     conn.close()

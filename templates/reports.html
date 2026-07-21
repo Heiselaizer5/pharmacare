@@ -20,7 +20,7 @@
     </div>
 
     <!-- Period Tabs -->
-    <div class="flex gap-2">
+    <div class="flex gap-2 flex-wrap">
         <a href="?period=daily" class="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all {% if period == 'daily' %}bg-primary-500 text-white shadow-lg shadow-primary-500/25{% else %}bg-gray-900/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/5{% endif %}">Daily</a>
         <a href="?period=weekly" class="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all {% if period == 'weekly' %}bg-primary-500 text-white shadow-lg shadow-primary-500/25{% else %}bg-gray-900/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/5{% endif %}">Weekly</a>
         <a href="?period=monthly" class="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all {% if period == 'monthly' %}bg-primary-500 text-white shadow-lg shadow-primary-500/25{% else %}bg-gray-900/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/5{% endif %}">Monthly</a>
