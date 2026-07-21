@@ -981,6 +981,9 @@ BACKUP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'backups')
 BRANCH_TABLES = ['medicines', 'purchases', 'sales', 'adjustments', 'expenses', 'users']
 SHARED_TABLES = ['branches']
 
+DELETE_ORDER = ['sale_items', 'adjustments', 'purchases', 'expenses', 'sales', 'medicines', 'users']
+INSERT_ORDER = ['users', 'medicines', 'branches', 'sales', 'sale_items', 'expenses', 'purchases', 'adjustments']
+
 
 def parse_backup_info(filepath):
     info = {'branch_id': None, 'branch_name': 'All Branches'}
@@ -1027,57 +1030,44 @@ def backup_database():
         f.write(f'-- BRANCH_NAME: {branch_name}\n')
         f.write(f'-- Generated: {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")} UTC\n\n')
 
-        for table in BRANCH_TABLES:
-            if bid:
-                if table == 'sale_items':
-                    cur.execute("""SELECT si.* FROM sale_items si
-                        JOIN sales s ON si.sale_id = s.id WHERE s.branch_id = %s""", (bid,))
-                else:
-                    cur.execute(f"SELECT * FROM {table} WHERE branch_id = %s", (bid,))
+        f.write('DO $$ BEGIN SET session_replication_role = \'replica\'; EXCEPTION WHEN OTHERS THEN NULL; END $$;\n\n')
+
+        all_data = {}
+
+        all_tables = list(dict.fromkeys(DELETE_ORDER + BRANCH_TABLES))
+        for table in all_tables:
+            if table == 'sale_items':
+                cur.execute("""SELECT si.* FROM sale_items si
+                    JOIN sales s ON si.sale_id = s.id""" + (" WHERE s.branch_id = %s" if bid else ""),
+                    (bid,) if bid else ())
+            elif bid:
+                cur.execute(f"SELECT * FROM {table} WHERE branch_id = %s", (bid,))
             else:
                 cur.execute(f"SELECT * FROM {table}")
             rows = cur.fetchall()
-            cols = [desc[0] for desc in cur.description]
+            cols = [desc[0] for desc in cur.description] if rows else []
+            all_data[table] = (rows, cols)
 
+        f.write('-- DELETE PHASE (children first)\n')
+        for table in DELETE_ORDER:
+            rows, cols = all_data.get(table, ([], []))
             if not rows:
-                f.write(f'-- {table}: (empty)\n\n')
                 continue
-
-            if bid:
-                if table == 'sale_items':
-                    f.write(f"DELETE FROM sale_items WHERE sale_id IN (SELECT id FROM sales WHERE branch_id = {bid});\n")
-                else:
-                    f.write(f"DELETE FROM {table} WHERE branch_id = {bid};\n")
+            if bid and table != 'sale_items':
+                f.write(f"DELETE FROM {table} WHERE branch_id = {bid};\n")
+            elif table == 'sale_items':
+                f.write(f"DELETE FROM sale_items WHERE sale_id IN (SELECT id FROM sales WHERE branch_id = {bid});\n") if bid else f.write(f"DELETE FROM sale_items;\n")
             else:
                 f.write(f"DELETE FROM {table};\n")
-                f.write(f"ALTER SEQUENCE {table}_id_seq RESTART WITH 1;\n")
 
-            for row in rows:
-                values = []
-                for val in row:
-                    if val is None:
-                        values.append('NULL')
-                    elif isinstance(val, bool):
-                        values.append('TRUE' if val else 'FALSE')
-                    elif isinstance(val, (int, float)):
-                        values.append(str(val))
-                    else:
-                        escaped = str(val).replace("'", "''")
-                        values.append(f"'{escaped}'")
-                cols_str = ', '.join(cols)
-                vals_str = ', '.join(values)
-                f.write(f"INSERT INTO {table} ({cols_str}) VALUES ({vals_str});\n")
-            f.write('\n')
-
-        for table in SHARED_TABLES:
-            cur.execute(f"SELECT * FROM {table}")
-            rows = cur.fetchall()
-            cols = [desc[0] for desc in cur.description]
+        f.write('\n-- INSERT PHASE (parents first)\n')
+        for table in INSERT_ORDER:
+            rows, cols = all_data.get(table, ([], []))
             if not rows:
-                f.write(f'-- {table}: (empty)\n\n')
+                f.write(f'-- {table}: (empty)\n')
                 continue
-            f.write(f"DELETE FROM {table};\n")
-            f.write(f"ALTER SEQUENCE {table}_id_seq RESTART WITH 1;\n")
+            if not bid:
+                f.write(f"ALTER SEQUENCE {table}_id_seq RESTART WITH 1;\n")
             for row in rows:
                 values = []
                 for val in row:
@@ -1087,6 +1077,9 @@ def backup_database():
                         values.append('TRUE' if val else 'FALSE')
                     elif isinstance(val, (int, float)):
                         values.append(str(val))
+                    elif hasattr(val, 'strftime'):
+                        escaped = val.strftime('%Y-%m-%d %H:%M:%S').replace("'", "''")
+                        values.append(f"'{escaped}'")
                     else:
                         escaped = str(val).replace("'", "''")
                         values.append(f"'{escaped}'")
@@ -1094,6 +1087,8 @@ def backup_database():
                 vals_str = ', '.join(values)
                 f.write(f"INSERT INTO {table} ({cols_str}) VALUES ({vals_str});\n")
             f.write('\n')
+
+        f.write('\nDO $$ BEGIN SET session_replication_role = \'origin\'; EXCEPTION WHEN OTHERS THEN NULL; END $$;\n')
 
     cur.close()
     conn.close()
@@ -1158,11 +1153,20 @@ def restore_backup(filename):
         with open(filepath, 'r', encoding='utf-8') as f:
             sql = f.read()
         statements = [s.strip() for s in sql.split(';') if s.strip() and not s.strip().startswith('--')]
+        executed = 0
         for stmt in statements:
-            cur.execute(stmt)
+            try:
+                cur.execute(stmt)
+                executed += 1
+            except Exception as e:
+                conn.rollback()
+                flash(f'Error on statement {executed + 1}: {str(e)[:200]}', 'error')
+                cur.close()
+                conn.close()
+                return redirect(url_for('settings'))
         conn.commit()
         label = info['branch_name'] if backup_branch_id else 'ALL branches'
-        flash(f'Restored branch "{label}" from: {filename} ({len(statements)} statements)', 'success')
+        flash(f'Restored "{label}" from: {filename} ({executed} statements OK)', 'success')
     except Exception as e:
         conn.rollback()
         flash(f'Restore failed: {str(e)}', 'error')
@@ -1196,11 +1200,21 @@ def upload_restore():
         with open(filepath, 'r', encoding='utf-8') as f:
             sql = f.read()
         statements = [s.strip() for s in sql.split(';') if s.strip() and not s.strip().startswith('--')]
+        executed = 0
         for stmt in statements:
-            cur.execute(stmt)
+            try:
+                cur.execute(stmt)
+                executed += 1
+            except Exception as e:
+                conn.rollback()
+                os.remove(filepath)
+                flash(f'Error on statement {executed + 1}: {str(e)[:200]}', 'error')
+                cur.close()
+                conn.close()
+                return redirect(url_for('settings'))
         conn.commit()
         label = info['branch_name'] if info['branch_id'] and info['branch_id'] != '0' else 'ALL branches'
-        flash(f'Restored branch "{label}" from upload: {filename} ({len(statements)} statements)', 'success')
+        flash(f'Restored "{label}" from upload: {filename} ({executed} statements OK)', 'success')
     except Exception as e:
         conn.rollback()
         os.remove(filepath)
